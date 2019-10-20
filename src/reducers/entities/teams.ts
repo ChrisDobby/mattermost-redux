@@ -20,7 +20,7 @@ function teams(state = {}, action) {
     switch (action.type) {
     case TeamTypes.RECEIVED_TEAMS_LIST:
     case SchemeTypes.RECEIVED_SCHEME_TEAMS:
-        return Object.assign({}, state, teamListToMap(action.data));
+        return Object.assign({}, state, teamListToMap(action.data.teams));
     case TeamTypes.RECEIVED_TEAMS:
         return Object.assign({}, state, action.data);
 
@@ -97,7 +97,7 @@ function myMembers(state = {}, action) {
     }
     case TeamTypes.RECEIVED_TEAMS_LIST: {
         const nextState = {...state};
-        const receivedTeams = teamListToMap(action.data);
+        const receivedTeams = teamListToMap(action.data.teams);
         updateState(receivedTeams, nextState);
         return nextState;
     }

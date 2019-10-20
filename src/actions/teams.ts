@@ -65,7 +65,10 @@ export function selectTeam(team: Team): ActionFunc {
 
 export function getMyTeams(): ActionFunc {
     return bindClientFunc({
-        clientFunc: Client4.getMyTeams,
+        clientFunc: async () => {
+            const result = await Client4.getMyTeams();
+            return {data: {teams: result.data, total_count: result.data.length}};
+        },
         onRequest: TeamTypes.MY_TEAMS_REQUEST,
         onSuccess: [TeamTypes.RECEIVED_TEAMS_LIST, TeamTypes.MY_TEAMS_SUCCESS],
         onFailure: TeamTypes.MY_TEAMS_FAILURE,
@@ -114,10 +117,21 @@ export function getTeams(page = 0, perPage: number = General.TEAMS_CHUNK_SIZE, i
             return {error};
         }
 
+        let teams;
+        let totalCount;
+
+        if (includeTotalCount) {
+            teams = data.teams;
+            totalCount = data.total_count;
+        } else {
+            teams = data;
+            totalCount = data.length;
+        }
+
         const actions: Action[] = [
             {
                 type: TeamTypes.RECEIVED_TEAMS_LIST,
-                data: includeTotalCount ? data.teams : data,
+                data: {teams, totalCount},
             },
             {
                 type: TeamTypes.GET_TEAMS_SUCCESS,
@@ -138,14 +152,23 @@ export function getTeams(page = 0, perPage: number = General.TEAMS_CHUNK_SIZE, i
     };
 }
 
-export function searchTeams(term: string): ActionFunc {
+export function searchTeams(term: string, paginate = false, page = 0, perPage = General.PAGE_SIZE_DEFAULT): ActionFunc {
     return bindClientFunc({
-        clientFunc: Client4.searchTeams,
+        clientFunc: async (param1, param2, param3, param4) => {
+            const result = await Client4.searchTeams(param1, param2, param3, param4);
+            if (paginate) {
+                return result;
+            }
+            return {data: {teams: result.data, total_count: result.data.length}};
+        },
         onRequest: TeamTypes.GET_TEAMS_REQUEST,
         onSuccess: [TeamTypes.RECEIVED_TEAMS_LIST, TeamTypes.GET_TEAMS_SUCCESS],
         onFailure: TeamTypes.GET_TEAMS_FAILURE,
         params: [
             term,
+            paginate,
+            page,
+            perPage,
         ],
     });
 }
